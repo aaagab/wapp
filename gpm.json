@@ -1,0 +1,23 @@
+{
+    "alias": "wapp",
+    "authors": [
+        "Gabriel Auger"
+    ],
+    "deps": [
+        "fe9fbe81-806f-4e85-8042-aaa33ce02d6a|etconf|3.0.0|gpm",
+        "0573e36e-e267-4200-a666-11c5b27cb9a2|gitlib|0.8.0|gpm",
+        "cf09346e-b436-4259-b6dd-e56516b508a5|message|9.0.0|gpm",
+        "89d8676a-6b02-43fa-8694-e97de5680cd0|nargs|5.1.1|gpm",
+        "df328dbe-54ab-4a6d-b7a2-932b0eaee30a|shell_helpers|5.4.1|gpm"
+    ],
+    "description": "Project builder for Web Applications",
+    "filen_main": "main.py",
+    "installer": "gpm",
+    "licenses": [
+        "MIT"
+    ],
+    "name": "Web App Builder",
+    "timestamp": 1682435483.161766,
+    "uuid4": "50f17029-c02a-41e9-b7cb-fb50a8ca7cea",
+    "version": "2.0.0"
+}

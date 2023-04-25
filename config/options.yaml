@@ -1,2 +1,99 @@
 args:
-  _examples:
+  _examples: |
+    main.py -r proxy --build -bf
+
+  basepath:
+    _type: str
+
+  profile:
+    _aliases: --profile,-r
+    _default: debug
+    _required: true
+    _type: str
+
+  backend:
+    _aliases: --backend,-b
+    _need_child: true
+    _xor: build,deploy,start,publish
+    settings:
+      csproj:
+        _type: file
+
+      msbuild:
+        _info: msbuild path
+        _type: file
+
+      msdeploy:
+        _info: msdeploy path
+        _type: file
+
+      sources:
+        _type: dir
+
+    build: 
+      _aliases: --build,-b
+      _info: build project.
+
+    deploy:
+      _aliases: --deploy,-d
+      _info: default DEPLOY_PATH is {USERPROFILE}/{GLOBAL_SETTINGS:PROXY_PATH}{USER_SETTINGS:BASEPATH}/
+      _label: DEPLOY_PATH
+      _type: dir
+      _values: "?"
+
+    start:
+      _aliases: --start,-s
+      _info: build project and start development server.
+
+    publish: 
+      _aliases: --publish,-p
+      _info: PUBLISH_PATH is {PWD}/src/_publish
+
+  frontend:
+    _aliases: --frontend,-f
+    _need_child: true
+    _xor: build,deploy,start,publish
+    settings:
+      minify:
+        _type: bool
+      npm:
+        _info: npm path
+        _type: str
+      webroot:
+        _info: set web root path
+      sources:
+        _type: dir
+
+    build:
+      _aliases: --build,-b
+      _info: build project.
+
+    deploy:
+      _aliases: --deploy,-d
+      _info: default DEPLOY_PATH is {USERPROFILE}/{GLOBAL_SETTINGS:PROXY_PATH}{USER_SETTINGS:BASEPATH}/{USER_SETTINGS:WEBROOT}
+      _label: DEPLOY_PATH
+      _type: dir
+      _values: "?"
+
+    publish:
+      _aliases: --publish,-p
+      _info: PUBLISH_PATH is {PWD}/src/_publish/{USER_SETTINGS:WEBROOT}
+
+    start:
+      _aliases: --start,-s
+      _info: build project and start development server.
+      port:
+        _info: development server port
+        _type: int
+
+  project:
+    _info: provide project name
+    _type: str
+
+  not_git:
+    _info: if this option is not selected and the folder is a git project, then os.getcwd() is changed to git root directory
+
+
+
+
+

@@ -171,7 +171,7 @@ def backend_deploy(
     ]
 
     if msdeploy_parameters is not None:
-        cmd.append(*msdeploy_parameters)
+        cmd.append(msdeploy_parameters)
 
     pprint(cmd)
 

@@ -206,6 +206,7 @@ if __name__ == "__main__":
                 direpa_sources=user_settings["direpa_frontend_sources"],
                 project_name=user_settings["project_name"],
                 port=args.frontend.start.port._value,
+                ignore_if=args.frontend.start.ignore_if._here,
             )
         else:
             pkg.msg.error("For --frontend: either --build, --start, --publish, or --deploy must be provided", exit=1)

@@ -112,6 +112,7 @@ def frontend_start(
     direpa_sources: str,
     project_name: str,
     port: int,
+    ignore_if: bool,
 ):
     if filenpa_npm is None:
         msg.error("filenpa_npm must be provided.")
@@ -134,56 +135,65 @@ def frontend_start(
     filenpa_wapp=os.path.join(os.path.expanduser("~"), "fty", "tmp", "wapp-{}.json".format(port))
 
     port_pid=get_port_pid(port)
-    if port_pid is not None:
-        os.kill(port_pid, signal.SIGTERM)
+    process_cmd=False
+    if port_pid is None:
+        process_cmd=True
+    else:
+        if ignore_if is True:
+            process_cmd=False
+            msg.info("frontend is already started.")
+        else:
+            process_cmd=True
+            os.kill(port_pid, signal.SIGTERM)
 
-    dy_wapp=dict({
-        project_name: dict(
-            pids=[],
-        )
-    })
-    try:
-        if os.path.exists(filenpa_wapp):
-            with open(filenpa_wapp, "r") as f:
-                dy_wapp=json.load(f)
-                if project_name in dy_wapp:
-                    if "pids" in dy_wapp[project_name]:
-                        for pid in dy_wapp[project_name]["pids"]:
-                            try:
-                                os.kill(pid, signal.SIGTERM)
-                            except OSError:
-                                pass
-    except json.decoder.JSONDecodeError:
-        pass
-
-    dy_wapp[project_name]["pids"]=[]
-
-    with open(filenpa_wapp, "w") as f:
-        f.write(json.dumps(dy_wapp, indent=4, sort_keys=True))
-
-    execute_script(
-        "frontend_server.py", 
-        window_name=window_name, 
-        dy_vars=dict(
-        filenpa_wapp=filenpa_wapp,
-        project_name=project_name,
-        direpa_sources=direpa_sources,
-        port=port,
-    ))
-
-    try:
-        while True:
-            port_pid=get_port_pid(port)
-            if port_pid is not None:
+    if process_cmd is True:
+        dy_wapp=dict({
+            project_name: dict(
+                pids=[],
+            )
+        })
+        try:
+            if os.path.exists(filenpa_wapp):
                 with open(filenpa_wapp, "r") as f:
                     dy_wapp=json.load(f)
-                    if len(dy_wapp[project_name]["pids"]) >= 2:
-                        obj_windows.rename(dy_wapp[project_name]["pids"][1], window_name)
+                    if project_name in dy_wapp:
+                        if "pids" in dy_wapp[project_name]:
+                            for pid in dy_wapp[project_name]["pids"]:
+                                try:
+                                    os.kill(pid, signal.SIGTERM)
+                                except OSError:
+                                    pass
+        except json.decoder.JSONDecodeError:
+            pass
 
-                msg.success("frontend development server started on port '{}'".format(port))
-                break
-            time.sleep(.3)
-    except KeyboardInterrupt:
-        sys.exit(1)
+        dy_wapp[project_name]["pids"]=[]
 
-    obj_windows.focus(cmd_pid)
+        with open(filenpa_wapp, "w") as f:
+            f.write(json.dumps(dy_wapp, indent=4, sort_keys=True))
+
+        execute_script(
+            "frontend_server.py", 
+            window_name=window_name, 
+            dy_vars=dict(
+            filenpa_wapp=filenpa_wapp,
+            project_name=project_name,
+            direpa_sources=direpa_sources,
+            port=port,
+        ))
+
+        try:
+            while True:
+                port_pid=get_port_pid(port)
+                if port_pid is not None:
+                    with open(filenpa_wapp, "r") as f:
+                        dy_wapp=json.load(f)
+                        if len(dy_wapp[project_name]["pids"]) >= 2:
+                            obj_windows.rename(dy_wapp[project_name]["pids"][1], window_name)
+
+                    msg.success("frontend development server started on port '{}'".format(port))
+                    break
+                time.sleep(.3)
+        except KeyboardInterrupt:
+            sys.exit(1)
+
+        obj_windows.focus(cmd_pid)

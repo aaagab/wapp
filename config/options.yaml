@@ -82,6 +82,9 @@ args:
     start:
       _aliases: --start,-s
       _info: build project and start development server.
+      ignore_if:
+        _aliases: --ignore-if,-i
+        _info: if server is already started then command is ignored
       port:
         _info: development server port
         _type: int

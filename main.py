@@ -200,6 +200,12 @@ if __name__ == "__main__":
                 filenpa_npm=global_settings["filenpa_npm"],
                 minify=args.frontend.settings.minify._value,
             )
+        elif args.frontend.npm._here is True:
+            pkg.frontend_npm(
+                direpa_sources=user_settings["direpa_frontend_sources"],
+                filenpa_npm=global_settings["filenpa_npm"],
+                npm_args=args.frontend.npm._values,
+            )
         elif args.frontend.start._here is True:
             pkg.frontend_start(
                 filenpa_npm=global_settings["filenpa_npm"],

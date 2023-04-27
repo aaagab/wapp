@@ -4,6 +4,7 @@ import json
 import os
 import signal
 import subprocess
+import shlex
 import sys
 import tempfile
 import time
@@ -12,6 +13,37 @@ from ..gpkgs import message as msg
 from ..gpkgs import shell_helpers as shell
 
 from .windows import Windows
+
+def frontend_npm(
+    direpa_sources: str,
+    filenpa_npm: str,
+    npm_args: list=None,
+):
+    if direpa_sources is None:
+        msg.error("direpa_sources must be provided")
+        raise Exception()
+
+    if filenpa_npm is None:
+        msg.error("filenpa_npm must be provided")
+        raise Exception()
+
+    if npm_args is None:
+        msg.error("npm_args must be provided")
+        raise Exception()
+
+    os.chdir(direpa_sources)
+
+    cmd=[
+        filenpa_npm,
+        *npm_args,
+    ]
+
+    proc=subprocess.Popen(cmd)
+    proc.communicate()
+    if proc.returncode == 0:
+        msg.success(shlex.quote(" ".join(cmd)))
+    else:
+        sys.exit(1)
 
 def frontend_build(
     direpa_sources: str,

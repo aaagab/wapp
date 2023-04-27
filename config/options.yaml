@@ -52,7 +52,7 @@ args:
   frontend:
     _aliases: --frontend,-f
     _need_child: true
-    _xor: build,deploy,start,publish
+    _xor: build,deploy,npm,start,publish
     settings:
       minify:
         _type: bool
@@ -74,6 +74,12 @@ args:
       _label: DEPLOY_PATH
       _type: dir
       _values: "?"
+
+    npm:
+      _aliases: --npm,-n
+      _info: cd sources directory and npm command with arguments
+      _values: "+"
+      _label: ARG
 
     publish:
       _aliases: --publish,-p

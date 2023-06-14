@@ -41,6 +41,12 @@ args:
       _type: dir
       _values: "?"
 
+    dotnet:
+      _aliases: --dotnet,-t
+      _info: cd sources directory and dotnet command with arguments
+      _values: "+"
+      _label: ARG
+
     start:
       _aliases: --start,-s
       _info: build project and start development server.

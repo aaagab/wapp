@@ -166,6 +166,12 @@ if __name__ == "__main__":
                 msdeploy_parameters=user_settings["msdeploy_parameters"],
                 project_name=user_settings["project_name"],
             )
+        elif args.backend.dotnet._here is True:
+            pkg.backend_dotnet(
+                direpa_sources=user_settings["direpa_backend_sources"],
+                filenpa_dotnet=global_settings["filenpa_dotnet"],
+                dotnet_args=args.backend.dotnet._values,
+            )
         else:
             pkg.msg.error("For --backend: either --build, --start, --publish, or --deploy must be provided", exit=1)
 

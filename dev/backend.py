@@ -4,6 +4,7 @@ import json
 import os
 import signal
 import subprocess
+import shlex
 import sys
 import tempfile
 import time
@@ -74,6 +75,37 @@ def backend_start(
     process=subprocess.Popen(cmd)
     process.communicate()
     if process.returncode != 0:
+        sys.exit(1)
+
+def backend_dotnet(
+    direpa_sources: str,
+    filenpa_dotnet: str,
+    dotnet_args: list=None,
+):
+    if direpa_sources is None:
+        msg.error("direpa_sources must be provided")
+        raise Exception()
+
+    if filenpa_dotnet is None:
+        msg.error("filenpa_dotnet must be provided")
+        raise Exception()
+
+    if dotnet_args is None:
+        msg.error("dotnet_args must be provided")
+        raise Exception()
+
+    os.chdir(direpa_sources)
+
+    cmd=[
+        filenpa_dotnet,
+        *dotnet_args,
+    ]
+
+    proc=subprocess.Popen(cmd)
+    proc.communicate()
+    if proc.returncode == 0:
+        msg.success(shlex.quote(" ".join(cmd)))
+    else:
         sys.exit(1)
 
 def backend_publish(

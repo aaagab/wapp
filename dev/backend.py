@@ -135,7 +135,7 @@ def backend_publish(
         '/v:Normal',
         '/nologo',
         '/m',
-        # "/p:Configuration={}".format(profile_name),
+        "/p:Configuration={}".format(profile_name),
         # "/p:EnvironmentName={}".format(profile_name),
         "/p:DeployTarget=Package",
         "/p:PublishProvider=FileSystem",

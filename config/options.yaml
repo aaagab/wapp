@@ -108,6 +108,17 @@ args:
   not_git:
     _info: if this option is not selected and the folder is a git project, then os.getcwd() is changed to git root directory
 
+  substitute:
+    _info: substitute variables placeholders with values
+    vars:
+      _info: files that contain variables, variable files are merged into one dictionary
+      _type: .json
+      _values: +
+    dst:
+      _info: files that contain variables placeholders that need to be substituted. variables placeholders must be of form {{[a-zA-Z0-9-_]+}} i.e. {{SPLUNK-TOKEN}}
+      _type: vpath
+      _values: +
+
 
 
 

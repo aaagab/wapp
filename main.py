@@ -222,3 +222,47 @@ if __name__ == "__main__":
             )
         else:
             pkg.msg.error("For --frontend: either --build, --start, --publish, or --deploy must be provided", exit=1)
+
+    if args.substitute._here is True:
+        direpa_project=os.path.dirname(filenpa_user_settings)
+        dy_vars=dict()
+        filenpas_dst=[]
+        if "substitute" in user_settings:
+            if profile_name in user_settings["substitute"]:
+                if "vars" in user_settings["substitute"][profile_name]:
+                    for filenpa_var in user_settings["substitute"][profile_name]["vars"]:
+                        if os.path.isabs(filenpa_var) is False:
+                            filenpa_var=os.path.join(direpa_project, filenpa_var)
+                        filenpa_var=os.path.normpath(filenpa_var)
+                        if os.path.exists(filenpa_var):
+                            with open(filenpa_var, "r") as f:
+                                dy_vars.update(json.load(f))
+                        else:
+                            pkg.msg.warning("vars file not found '{}'".format(filenpa_var))
+
+                if "dst" in user_settings["substitute"][profile_name]:
+                    for filenpa_dst in user_settings["substitute"][profile_name]["dst"]:
+                        if os.path.isabs(filenpa_dst) is False:
+                            filenpa_dst=os.path.join(direpa_project, filenpa_dst)
+                        filenpa_dst=os.path.normpath(filenpa_dst)
+                        if os.path.exists(filenpa_dst):
+                            filenpas_dst.append(filenpa_dst)
+                        else:
+                            pkg.msg.warning("destination file not found '{}'".format(filenpa_dst))
+
+        for dy in args.substitute.vars._values:
+            dy_vars.update(dy)
+
+        for filenpa_dst in args.substitute.dst._values:
+            filenpas_dst.append(filenpa_dst)
+
+        if len(dy_vars) == 0:
+            pkg.msg.error("In --substitute command no vars have been provided.", exit=1)
+
+        if len(filenpas_dst) == 0:
+            pkg.msg.error("In --substitute command no destination files have been provided", exit=1)
+
+        pkg.substitute(
+            dy_vars=dy_vars,
+            filenpas_dst=filenpas_dst,
+        )

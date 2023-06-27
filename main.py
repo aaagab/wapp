@@ -49,6 +49,7 @@ if __name__ == "__main__":
             os.chdir(git.get_direpa_root())
 
     direpa_project=os.getcwd()
+    filenpa_modif=os.path.join(direpa_project, ".wappmodif.json")
 
     filenpa_global_settings=os.path.join(etconf.direpa_configuration, "settings.json")
     global_settings=dict(
@@ -125,6 +126,12 @@ if __name__ == "__main__":
                     with open(os.path.join(direpa_project, "hostname_url.txt"), "w") as f:
                         f.write(domain+user_settings["basepath"])
 
+    exclude_build_folders=[]
+    if "exclude_build_folders" in global_settings:
+        exclude_build_folders=global_settings["exclude_build_folders"]
+
+    import time
+    start=time.time()
     filenpa_hostname=os.path.join(profile_name)
     if args.backend._here:
         if profile_name is not None:
@@ -160,12 +167,18 @@ if __name__ == "__main__":
                 filenpa_csproj=user_settings["filenpa_csproj"],
                 filenpa_msbuild=global_settings["filenpa_msbuild"],
                 profile_name=profile_name,
+                exclude_build_folders=exclude_build_folders,
+                filenpa_modif=filenpa_modif,
+                force=args.backend.publish.force._here,
             )
         elif args.backend.deploy._here is True:
             pkg.backend_publish(
                 filenpa_csproj=user_settings["filenpa_csproj"],
                 filenpa_msbuild=global_settings["filenpa_msbuild"],
                 profile_name=profile_name,
+                exclude_build_folders=exclude_build_folders,
+                filenpa_modif=filenpa_modif,
+                force=args.backend.deploy.force._here,
             )
 
             pkg.backend_deploy(
@@ -173,6 +186,9 @@ if __name__ == "__main__":
                 filenpa_csproj=user_settings["filenpa_csproj"],
                 direpa_deploy=args.backend.deploy._value,
                 basepath=user_settings["basepath"],
+                force=args.backend.deploy.force._here,
+                filenpa_modif=filenpa_modif,
+                profile_name=profile_name,
                 msdeploy_parameters=user_settings["msdeploy_parameters"],
                 project_name=user_settings["project_name"],
             )
@@ -184,6 +200,8 @@ if __name__ == "__main__":
             )
         else:
             pkg.msg.error("For --backend: either --build, --start, --publish, or --deploy must be provided", exit=1)
+
+        pkg.msg.info("execution-time: {}s".format(int(time.time()-start)))
 
     if args.frontend._here:
         direpa_publish=None
@@ -233,6 +251,8 @@ if __name__ == "__main__":
         else:
             pkg.msg.error("For --frontend: either --build, --start, --publish, or --deploy must be provided", exit=1)
 
+        pkg.msg.info("execution-time: {}s".format(int(time.time()-start)))
+
     if args.substitute._here is True:
         dy_vars=dict()
         filenpas_dst=[]
@@ -275,3 +295,5 @@ if __name__ == "__main__":
             dy_vars=dy_vars,
             filenpas_dst=filenpas_dst,
         )
+
+        pkg.msg.info("execution-time: {}s".format(int(time.time()-start)))

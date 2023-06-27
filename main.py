@@ -48,6 +48,8 @@ if __name__ == "__main__":
         if git.is_direpa_git():
             os.chdir(git.get_direpa_root())
 
+    direpa_project=os.getcwd()
+
     filenpa_global_settings=os.path.join(etconf.direpa_configuration, "settings.json")
     global_settings=dict(
         filenpa_msbuild=None,
@@ -72,7 +74,7 @@ if __name__ == "__main__":
     else:
         global_settings["filenpa_{}".format(name)]=args.frontend.settings._[name]._value
 
-    filenpa_user_settings=os.path.join(os.getcwd(), ".wapp.json")
+    filenpa_user_settings=os.path.join(direpa_project, ".wapp.json")
     user_settings=dict(
         direpa_backend_sources=None,
         direpa_frontend_sources=None,
@@ -116,6 +118,14 @@ if __name__ == "__main__":
             pkg.msg.error("basepath must start with '/' '{}'".format(user_settings["basepath"]))
             raise Exception()
 
+        if "profiles" in global_settings:
+            if profile_name in global_settings["profiles"]:
+                if "public_url" in global_settings["profiles"][profile_name]:
+                    domain=global_settings["profiles"][profile_name]["public_url"]
+                    with open(os.path.join(direpa_project, "hostname_url.txt"), "w") as f:
+                        f.write(domain+user_settings["basepath"])
+
+    filenpa_hostname=os.path.join(profile_name)
     if args.backend._here:
         if profile_name is not None:
             direpa_profiles=os.path.join(
@@ -224,7 +234,6 @@ if __name__ == "__main__":
             pkg.msg.error("For --frontend: either --build, --start, --publish, or --deploy must be provided", exit=1)
 
     if args.substitute._here is True:
-        direpa_project=os.path.dirname(filenpa_user_settings)
         dy_vars=dict()
         filenpas_dst=[]
         if "substitute" in user_settings:

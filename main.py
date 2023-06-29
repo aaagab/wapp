@@ -36,6 +36,64 @@ if __name__ == "__main__":
                     pkg.msg.error("Provided path '{}' is not a file.".format(path_elem))
                     raise Exception()
             return os.path.normpath(path_elem)
+
+    def substitute(
+        direpa_project,
+        profile_name,
+        user_settings,
+        arg,
+        pkg,
+    ):
+        dy_vars=dict()
+        filenpas_dst=[]
+        if "substitute" in user_settings:
+            if profile_name in user_settings["substitute"]:
+                if "vars" in user_settings["substitute"][profile_name]:
+                    for filenpa_var in user_settings["substitute"][profile_name]["vars"]:
+                        if os.path.isabs(filenpa_var) is False:
+                            filenpa_var=os.path.join(direpa_project, filenpa_var)
+                        filenpa_var=os.path.normpath(filenpa_var)
+                        if os.path.exists(filenpa_var):
+                            with open(filenpa_var, "r") as f:
+                                dy_vars.update(json.load(f))
+                        else:
+                            pkg.msg.warning("vars file not found '{}'".format(filenpa_var))
+
+                if "dst" in user_settings["substitute"][profile_name]:
+                    for filenpa_dst in user_settings["substitute"][profile_name]["dst"]:
+                        if os.path.isabs(filenpa_dst) is False:
+                            filenpa_dst=os.path.join(direpa_project, filenpa_dst)
+                        filenpa_dst=os.path.normpath(filenpa_dst)
+                        if os.path.exists(filenpa_dst):
+                            filenpas_dst.append(filenpa_dst)
+                        else:
+                            pkg.msg.warning("destination file not found '{}'".format(filenpa_dst))
+
+        count=1
+        for dy in arg.vars._values:
+            if count == 1:
+                dy_vars=dict()
+            dy_vars.update(dy)
+
+        count=1
+        for filenpa_dst in arg.dst._values:
+            if count == 1:
+                filenpas_dst=[]
+            filenpas_dst.append(filenpa_dst)
+
+        if len(dy_vars) == 0:
+            pkg.msg.error("In --substitute command no vars have been provided.", exit=1)
+
+        if len(filenpas_dst) == 0:
+            pkg.msg.error("In --substitute command no destination files have been provided", exit=1)
+
+        pkg.substitute(
+            dy_vars=dy_vars,
+            filenpas_dst=filenpas_dst,
+        )
+
+        pkg.msg.info("execution-time: {}s".format(int(time.time()-start)))
+
     
     etconf=pkg.Etconf(enable_dev_conf=False, tree=dict( files=dict({ "settings.json": dict() })), seed=seed)
     args=pkg.Nargs(
@@ -181,6 +239,15 @@ if __name__ == "__main__":
                 force=args.backend.deploy.force._here,
             )
 
+            if args.backend.deploy.substitute._here is True:
+                substitute(
+                    direpa_project,
+                    profile_name,
+                    user_settings,
+                    args.backend.deploy.substitute,
+                    pkg,
+                )
+
             pkg.backend_deploy(
                 filenpa_msdeploy=global_settings["filenpa_msdeploy"],
                 filenpa_csproj=user_settings["filenpa_csproj"],
@@ -254,46 +321,11 @@ if __name__ == "__main__":
         pkg.msg.info("execution-time: {}s".format(int(time.time()-start)))
 
     if args.substitute._here is True:
-        dy_vars=dict()
-        filenpas_dst=[]
-        if "substitute" in user_settings:
-            if profile_name in user_settings["substitute"]:
-                if "vars" in user_settings["substitute"][profile_name]:
-                    for filenpa_var in user_settings["substitute"][profile_name]["vars"]:
-                        if os.path.isabs(filenpa_var) is False:
-                            filenpa_var=os.path.join(direpa_project, filenpa_var)
-                        filenpa_var=os.path.normpath(filenpa_var)
-                        if os.path.exists(filenpa_var):
-                            with open(filenpa_var, "r") as f:
-                                dy_vars.update(json.load(f))
-                        else:
-                            pkg.msg.warning("vars file not found '{}'".format(filenpa_var))
-
-                if "dst" in user_settings["substitute"][profile_name]:
-                    for filenpa_dst in user_settings["substitute"][profile_name]["dst"]:
-                        if os.path.isabs(filenpa_dst) is False:
-                            filenpa_dst=os.path.join(direpa_project, filenpa_dst)
-                        filenpa_dst=os.path.normpath(filenpa_dst)
-                        if os.path.exists(filenpa_dst):
-                            filenpas_dst.append(filenpa_dst)
-                        else:
-                            pkg.msg.warning("destination file not found '{}'".format(filenpa_dst))
-
-        for dy in args.substitute.vars._values:
-            dy_vars.update(dy)
-
-        for filenpa_dst in args.substitute.dst._values:
-            filenpas_dst.append(filenpa_dst)
-
-        if len(dy_vars) == 0:
-            pkg.msg.error("In --substitute command no vars have been provided.", exit=1)
-
-        if len(filenpas_dst) == 0:
-            pkg.msg.error("In --substitute command no destination files have been provided", exit=1)
-
-        pkg.substitute(
-            dy_vars=dy_vars,
-            filenpas_dst=filenpas_dst,
+        substitute(
+            direpa_project,
+            profile_name,
+            user_settings,
+            args.substitute,
+            pkg,
         )
 
-        pkg.msg.info("execution-time: {}s".format(int(time.time()-start)))

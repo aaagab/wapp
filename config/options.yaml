@@ -40,6 +40,7 @@ args:
       _label: DEPLOY_PATH
       _type: dir
       _values: "?"
+      "@":  args.substitute
       force:
         _info: force building even if project is up-to-date
 
@@ -113,7 +114,7 @@ args:
     _info: if this option is not selected and the folder is a git project, then os.getcwd() is changed to git root directory
 
   substitute:
-    _info: substitute variables placeholders with values
+    _info: substitute variables placeholders with values, If --vars are provided then vars in .wapp.json are ignored if any. If --dst are provided then dst files in .wapp.json are ignored if any.
     vars:
       _info: files that contain variables, variable files are merged into one dictionary
       _type: .json

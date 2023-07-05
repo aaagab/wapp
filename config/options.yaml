@@ -10,6 +10,8 @@ args:
     _default: debug
     _required: true
     _type: str
+    default:
+      _info: set default url if exists to hostname_url when selected
 
   backend:
     _aliases: --backend,-b

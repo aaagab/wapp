@@ -177,12 +177,17 @@ if __name__ == "__main__":
             pkg.msg.error("basepath must start with '/' '{}'".format(user_settings["basepath"]))
             raise Exception()
 
-        if "profiles" in global_settings:
-            if profile_name in global_settings["profiles"]:
-                if "public_url" in global_settings["profiles"][profile_name]:
-                    domain=global_settings["profiles"][profile_name]["public_url"]
-                    with open(os.path.join(direpa_project, "hostname_url.txt"), "w") as f:
-                        f.write(domain+user_settings["basepath"])
+        if args.profile.default._here is True:
+            if "default_url" in global_settings:
+                with open(os.path.join(direpa_project, "hostname_url.txt"), "w") as f:
+                    f.write(global_settings["default_url"])
+        else:
+            if "profiles" in global_settings:
+                if profile_name in global_settings["profiles"]:
+                    if "public_url" in global_settings["profiles"][profile_name]:
+                        domain=global_settings["profiles"][profile_name]["public_url"]
+                        with open(os.path.join(direpa_project, "hostname_url.txt"), "w") as f:
+                            f.write(domain+user_settings["basepath"])
 
     exclude_build_folders=[]
     if "exclude_build_folders" in global_settings:

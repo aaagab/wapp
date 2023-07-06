@@ -4,14 +4,12 @@ import json
 import os
 import signal
 import sys
-import platform
 import subprocess
-import tempfile
-
 
 os.environ["BROWSER"]="None"
 os.environ["HOST"]="127.0.0.1"
 os.environ["PORT"]="{port}"
+launch_pid="{launch_pid}"
 
 project_name="{project_name}"
 filenpa_wapp=r"{filenpa_wapp}"
@@ -58,7 +56,10 @@ try:
     proc.communicate()
     if proc.returncode != 0:
         sys.exit(1)
-
+except BaseException as e:
+    os.kill(int(launch_pid), signal.SIGTERM)
+    os.system("pause")
+    raise
 finally:
     os.remove(os.path.realpath(__file__))
     for pid in pids:

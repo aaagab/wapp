@@ -211,6 +211,7 @@ def frontend_start(
             project_name=project_name,
             direpa_sources=direpa_sources,
             port=port,
+            launch_pid=os.getpid(),
         ))
 
         try:

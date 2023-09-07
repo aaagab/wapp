@@ -135,6 +135,7 @@ if __name__ == "__main__":
 
     filenpa_user_settings=os.path.join(direpa_project, ".wapp.json")
     user_settings=dict(
+        direpa_deploy=None,
         direpa_backend_sources=None,
         direpa_frontend_sources=None,
         basepath=None,
@@ -166,6 +167,12 @@ if __name__ == "__main__":
 
     if args.project._value is not None:
         user_settings["project_name"]=args.project._value
+
+    if args.deploy_path._value is not None:
+        user_settings["direpa_deploy"]=os.path.normpath(args.deploy_path._value)
+    else:
+        if user_settings["direpa_deploy"] is not None:
+            user_settings["direpa_deploy"]=os.path.normpath(user_settings["direpa_deploy"])
 
     profile_name=args.profile._value.lower()
 
@@ -235,6 +242,9 @@ if __name__ == "__main__":
                 force=args.backend.publish.force._here,
             )
         elif args.backend.deploy._here is True:
+            if user_settings["direpa_deploy"] is None:
+                pkg.msg.error("direpa_deploy must be provided")            
+
             pkg.backend_publish(
                 filenpa_csproj=user_settings["filenpa_csproj"],
                 filenpa_msbuild=global_settings["filenpa_msbuild"],
@@ -256,8 +266,7 @@ if __name__ == "__main__":
             pkg.backend_deploy(
                 filenpa_msdeploy=global_settings["filenpa_msdeploy"],
                 filenpa_csproj=user_settings["filenpa_csproj"],
-                direpa_deploy=args.backend.deploy._value,
-                basepath=user_settings["basepath"],
+                direpa_deploy=user_settings["direpa_deploy"],
                 force=args.backend.deploy.force._here,
                 filenpa_modif=filenpa_modif,
                 profile_name=profile_name,
@@ -289,8 +298,11 @@ if __name__ == "__main__":
             if args.frontend.build._here is True:
                 pass
             elif args.frontend.deploy._here is True:
+                if user_settings["direpa_deploy"] is None:
+                    pkg.msg.error("direpa_deploy must be provided")
+
                 direpa_publish=os.path.join(
-                    pkg.get_direpa_deploy(user_settings["basepath"]),
+                    user_settings["direpa_deploy"],
                     user_settings["webroot"],
                 )
             elif args.frontend.publish._here is True:

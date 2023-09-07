@@ -5,6 +5,9 @@ args:
   basepath:
     _type: str
 
+  deploy_path:
+    _type: dir
+
   profile:
     _aliases: --profile,-r
     _default: debug

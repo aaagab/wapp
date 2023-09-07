@@ -13,7 +13,7 @@ from ..gpkgs import message as msg
 from ..gpkgs import shell_helpers as shell
 
 from .windows import Windows
-from .helpers import get_direpa_deploy, get_direpa_publish
+from .helpers import get_direpa_publish
 from .modif import does_project_need_build, get_modif_time, save_modif
 
 
@@ -191,7 +191,6 @@ def backend_deploy(
     force: bool,
     filenpa_modif: str,
     profile_name: str,
-    basepath:str=None,
     msdeploy_parameters:list=None,
 ):
     if filenpa_msdeploy is None:
@@ -205,13 +204,6 @@ def backend_deploy(
     if project_name is None:
         msg.error("project_name must be provided.")
         raise Exception()
-
-    if direpa_deploy is None:
-        if basepath is None:
-            msg.error("Either direpa_deploy or basepath must be provided.")
-            raise Exception()
-        else:
-            direpa_deploy=get_direpa_deploy(basepath)
 
     direpa_publish=get_direpa_publish(os.path.dirname(filenpa_csproj))
 
@@ -237,7 +229,7 @@ def backend_deploy(
     if to_deploy is True:
         shell.cmd_devnull([
             "pm2",
-            "start",
+            "stop",
             project_name
         ])
 

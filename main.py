@@ -346,3 +346,15 @@ if __name__ == "__main__":
             pkg,
         )
 
+
+    if args.msal._here is True:
+        
+        pkg.msal_signin(
+            direpa_project,
+            filenpa_cache=os.path.join(etconf.direpa_configuration, "cache.bin"),
+            filenpa_conf=args.msal.conf._value,
+            filenpa_token=args.msal.token._value,
+            interactive=args.msal.interactive._here,
+            refresh=args.msal.refresh._here,
+            show=args.msal.show._here,
+        )

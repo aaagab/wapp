@@ -129,7 +129,27 @@ args:
       _type: vpath
       _values: +
 
-
-
-
-
+  msal:
+    _info: |
+      set msal_email=myemail@domain.com
+      set msal_password=mypass
+    conf:
+      _type: file
+      _info: |
+        .msal.json
+        {
+            "client-id": "{GUID}",
+            "tenant-id": "{GUID}",
+            "scopes": [
+                "MyScope"
+            ],
+            "email": "myemail@domain.com"
+        }
+    interactive:
+      _info: interactive prompt with default browser
+    token:
+      _type: vpath
+    refresh:
+      _info: force refresh cache
+    show:
+      _info: show access token

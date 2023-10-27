@@ -6,6 +6,8 @@ if __name__ == "__main__":
     import json
     import os
     import sys
+    import time
+
     direpa_script=os.path.dirname(os.path.realpath(__file__))
     direpa_script_parent=os.path.dirname(direpa_script)
     module_name=os.path.basename(direpa_script)
@@ -93,7 +95,6 @@ if __name__ == "__main__":
         )
 
         pkg.msg.info("execution-time: {}s".format(int(time.time()-start)))
-
     
     etconf=pkg.Etconf(enable_dev_conf=False, tree=dict( files=dict({ "settings.json": dict() })), seed=seed)
     args=pkg.Nargs(
@@ -174,52 +175,65 @@ if __name__ == "__main__":
         if user_settings["direpa_deploy"] is not None:
             user_settings["direpa_deploy"]=os.path.normpath(user_settings["direpa_deploy"])
 
-    profile_name=args.profile._value.lower()
-
-    if args.basepath._value is not None:
-        user_settings["basepath"]=args.basepath._value
-
-    if user_settings["basepath"] is not None:
-        if user_settings["basepath"][0] != "/":
-            pkg.msg.error("basepath must start with '/' '{}'".format(user_settings["basepath"]))
-            raise Exception()
-
-        if args.profile.default._here is True:
-            if "default_url" in global_settings:
-                with open(os.path.join(direpa_project, "hostname_url.txt"), "w") as f:
-                    f.write(global_settings["default_url"])
-        else:
-            if "profiles" in global_settings:
-                if profile_name in global_settings["profiles"]:
-                    if "public_url" in global_settings["profiles"][profile_name]:
-                        domain=global_settings["profiles"][profile_name]["public_url"]
-                        with open(os.path.join(direpa_project, "hostname_url.txt"), "w") as f:
-                            f.write(domain+user_settings["basepath"])
-
     exclude_build_folders=[]
     if "exclude_build_folders" in global_settings:
         exclude_build_folders=global_settings["exclude_build_folders"]
 
-    import time
     start=time.time()
-    filenpa_hostname=os.path.join(profile_name)
-    if args.backend._here:
-        if profile_name is not None:
-            direpa_profiles=os.path.join(
-                os.getcwd(), 
-                user_settings["direpa_backend_sources"],
-                "Properties",
-                "PublishProfiles",
-            )
 
-            if os.path.exists(direpa_profiles):
-                profiles=[elem[:-7].lower() for elem in sorted(os.listdir(direpa_profiles)) if elem[-6:] == "pubxml"]
-                if profile_name not in profiles:
-                    pkg.msg.error("Profile '{}' not found in {}".format(profile_name, profiles))
-                    raise Exception()
-            else:
-                pkg.msg.error("Profiles directory not found '{}'".format(direpa_profiles))
+    profile_name=args.profile._value
+
+    if args.backend.build._here is True or \
+        args.backend.start._here is True or \
+        args.backend.publish._here is True or \
+        args.backend.deploy._here is True or \
+        args.substitute._here is True:
+
+
+        if profile_name is None:
+            pkg.msg.error("--profile must be provided")
+            raise Exception()
+
+        profile_name=profile_name.lower()
+
+
+        if args.basepath._value is not None:
+            user_settings["basepath"]=args.basepath._value
+
+        if user_settings["basepath"] is not None:
+            if user_settings["basepath"][0] != "/":
+                pkg.msg.error("basepath must start with '/' '{}'".format(user_settings["basepath"]))
                 raise Exception()
+
+            if args.profile.default._here is True:
+                if "default_url" in global_settings:
+                    with open(os.path.join(direpa_project, "hostname_url.txt"), "w") as f:
+                        f.write(global_settings["default_url"])
+            else:
+                if "profiles" in global_settings:
+                    if profile_name in global_settings["profiles"]:
+                        if "public_url" in global_settings["profiles"][profile_name]:
+                            domain=global_settings["profiles"][profile_name]["public_url"]
+                            with open(os.path.join(direpa_project, "hostname_url.txt"), "w") as f:
+                                f.write(domain+user_settings["basepath"])
+
+        direpa_profiles=os.path.join(
+            os.getcwd(), 
+            user_settings["direpa_backend_sources"],
+            "Properties",
+            "PublishProfiles",
+        )
+
+        if os.path.exists(direpa_profiles):
+            profiles=[elem[:-7].lower() for elem in sorted(os.listdir(direpa_profiles)) if elem[-6:] == "pubxml"]
+            if profile_name not in profiles:
+                pkg.msg.error("Profile '{}' not found in {}".format(profile_name, profiles))
+                raise Exception()
+        else:
+            pkg.msg.error("Profiles directory not found '{}'".format(direpa_profiles))
+            raise Exception()
+
+    if args.backend._here:
 
         if args.backend.build._here is True:
             pkg.backend_build(
@@ -348,7 +362,6 @@ if __name__ == "__main__":
 
 
     if args.msal._here is True:
-        
         pkg.msal_signin(
             direpa_project,
             filenpa_cache=os.path.join(etconf.direpa_configuration, "cache.bin"),

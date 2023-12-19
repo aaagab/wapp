@@ -89,6 +89,7 @@ def frontend_build(
     ]
 
     print(cmd)
+
     proc=subprocess.Popen(cmd)
     proc.communicate()
     if proc.returncode == 0:

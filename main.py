@@ -183,6 +183,11 @@ if __name__ == "__main__":
 
     profile_name=args.profile._value
 
+    if "env" in user_settings:
+        if profile_name in user_settings["env"]:
+            for key in sorted(user_settings["env"][profile_name]):
+                os.environ[key]=user_settings["env"][profile_name][key]
+
     if args.backend.build._here is True or \
         args.backend.start._here is True or \
         args.backend.publish._here is True or \

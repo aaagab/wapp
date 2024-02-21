@@ -10,7 +10,8 @@ import sys
 import threading
 
 import ctypes
-from ctypes import wintypes, c_char_p
+if os.name == "nt":
+    from ctypes import wintypes, c_char_p
 from collections import namedtuple
 
 class Windows():

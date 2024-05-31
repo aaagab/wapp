@@ -243,7 +243,8 @@ if __name__ == "__main__":
         if args.backend.build._here is True:
             pkg.backend_build(
                 filenpa_csproj=user_settings["filenpa_csproj"],
-                filenpa_msbuild=global_settings["filenpa_msbuild"],
+                # filenpa_msbuild=global_settings["filenpa_msbuild"],
+                filenpa_dotnet=global_settings["filenpa_dotnet"],
                 profile_name=profile_name,
             )
         elif args.backend.start._here is True:
@@ -254,7 +255,8 @@ if __name__ == "__main__":
         elif args.backend.publish._here is True:
             pkg.backend_publish(
                 filenpa_csproj=user_settings["filenpa_csproj"],
-                filenpa_msbuild=global_settings["filenpa_msbuild"],
+                # filenpa_msbuild=global_settings["filenpa_msbuild"],
+                filenpa_dotnet=global_settings["filenpa_dotnet"],
                 profile_name=profile_name,
                 exclude_build_folders=exclude_build_folders,
                 filenpa_modif=filenpa_modif,
@@ -266,7 +268,8 @@ if __name__ == "__main__":
 
             pkg.backend_publish(
                 filenpa_csproj=user_settings["filenpa_csproj"],
-                filenpa_msbuild=global_settings["filenpa_msbuild"],
+                # filenpa_msbuild=global_settings["filenpa_msbuild"],
+                filenpa_dotnet=global_settings["filenpa_dotnet"],
                 profile_name=profile_name,
                 exclude_build_folders=exclude_build_folders,
                 filenpa_modif=filenpa_modif,

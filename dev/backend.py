@@ -19,30 +19,47 @@ from .modif import does_project_need_build, get_modif_time, save_modif
 
 def backend_build(
     filenpa_csproj: str,
-    filenpa_msbuild: str,
+    # filenpa_msbuild: str,
+    filenpa_dotnet: str,
     profile_name: str,
 ):
     if filenpa_csproj is None:
         msg.error("filenpa_csproj must be provided.")
         raise Exception()
     
-    if filenpa_msbuild is None:
-        msg.error("filenpa_msbuild must be provided.")
+    # if filenpa_msbuild is None:
+    #     msg.error("filenpa_msbuild must be provided.")
+    #     raise Exception()
+
+    if filenpa_dotnet is None:
+        msg.error("filenpa_dotnet must be provided")
         raise Exception()
 
     if profile_name is None:
         msg.error("profile_name must be provided.")
         raise Exception()
 
+    # cmd=[
+    #     filenpa_msbuild,
+    #     filenpa_csproj,
+    #     "/v:Normal",
+    #     "/nologo",
+    #     "/m",
+    #     "/p:EnvironmentName={}".format(profile_name),
+    #     # "/p:Configuration={}".format(profile_name.capitalize()),
+    # ]
+
     cmd=[
-        filenpa_msbuild,
+        filenpa_dotnet,
+        "msbuild",
+        "-verbosity:normal",
+        "-noLogo",
+        "-m",
+        f"-p:EnvironmentName={profile_name};Configuration={profile_name.capitalize()}",
         filenpa_csproj,
-        "/v:Normal",
-        "/nologo",
-        "/m",
-        "/p:EnvironmentName={}".format(profile_name),
-        # "/p:Configuration={}".format(profile_name.capitalize()),
     ]
+
+
     pprint(cmd)
     process=subprocess.Popen(cmd)
     process.communicate()
@@ -111,7 +128,8 @@ def backend_dotnet(
 
 def backend_publish(
     filenpa_csproj: str,
-    filenpa_msbuild: str,
+    # filenpa_msbuild: str,
+    filenpa_dotnet: str,
     profile_name: str,
     exclude_build_folders: list,
     filenpa_modif: str,
@@ -121,8 +139,12 @@ def backend_publish(
         msg.error("filenpa_csproj must be provided.")
         raise Exception()
     
-    if filenpa_msbuild is None:
-        msg.error("filenpa_msbuild must be provided.")
+    # if filenpa_msbuild is None:
+    #     msg.error("filenpa_msbuild must be provided.")
+    #     raise Exception()
+
+    if filenpa_dotnet is None:
+        msg.error("filenpa_dotnet must be provided")
         raise Exception()
 
     if profile_name is None:
@@ -148,22 +170,41 @@ def backend_publish(
     )
 
     if to_build is True:
+        # cmd=[
+        #     filenpa_msbuild,
+        #     filenpa_csproj,
+        #     '/v:Normal',
+        #     '/nologo',
+        #     '/m',
+        #     "/p:Configuration={}".format(profile_name),
+        #     # "/p:EnvironmentName={}".format(profile_name),
+        #     "/p:DeployTarget=Package",
+        #     "/p:PublishProvider=FileSystem",
+        #     "/p:PublishProfile={}".format(profile_name),
+        #     '/p:DeployOnBuild=True',
+        #     '/p:DeleteExistingFiles=True',
+        #     '/p:ExcludeApp_Data=False',
+        #     '/p:WebPublishMethod=FileSystem',
+        #     '/p:publishUrl={}'.format(direpa_publish),
+        # ]
+
         cmd=[
-            filenpa_msbuild,
+            filenpa_dotnet,
+            "msbuild",
+            "-verbosity:normal",
+            "-noLogo",
+            "-m",
+            f"-p:Configuration={profile_name}",
+            # f"-p:EnvironmentName={profile_name}",
+            "-p:DeployTarget=Package",
+            "-p:PublishProvider=FileSystem",
+            "-p:PublishProfile={}".format(profile_name),
+            '-p:DeployOnBuild=True',
+            '-p:DeleteExistingFiles=True',
+            '-p:ExcludeApp_Data=False',
+            '-p:WebPublishMethod=FileSystem',
+            '-p:publishUrl={}'.format(direpa_publish),
             filenpa_csproj,
-            '/v:Normal',
-            '/nologo',
-            '/m',
-            "/p:Configuration={}".format(profile_name),
-            # "/p:EnvironmentName={}".format(profile_name),
-            "/p:DeployTarget=Package",
-            "/p:PublishProvider=FileSystem",
-            "/p:PublishProfile={}".format(profile_name),
-            '/p:DeployOnBuild=True',
-            '/p:DeleteExistingFiles=True',
-            '/p:ExcludeApp_Data=False',
-            '/p:WebPublishMethod=FileSystem',
-            '/p:publishUrl={}'.format(direpa_publish),
         ]
 
         pprint(cmd)

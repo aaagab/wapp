@@ -2,11 +2,7 @@
 # authors: Gabriel Auger
 # name: Web App Builder
 # licenses: MIT 
-<<<<<<< HEAD
 __version__= "3.4.0"
-=======
-__version__= "3.3.2"
->>>>>>> 87d705f94cbddd0d94785ad1a53bddd12271b62a
 
 from .dev.backend import backend_build, backend_start, backend_publish, backend_deploy, backend_dotnet
 from .dev.frontend import frontend_build, frontend_start, frontend_npm

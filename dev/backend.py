@@ -8,18 +8,19 @@ import shlex
 import sys
 import tempfile
 import time
+import platform
+import shutil
 
 from ..gpkgs import message as msg
 from ..gpkgs import shell_helpers as shell
 
 from .windows import Windows
+from .helpers import Env
 from .helpers import get_direpa_publish
 from .modif import does_project_need_build, get_modif_time, save_modif
 
-
 def backend_build(
     filenpa_csproj: str,
-    # filenpa_msbuild: str,
     filenpa_dotnet: str,
     profile_name: str,
 ):
@@ -27,10 +28,6 @@ def backend_build(
         msg.error("filenpa_csproj must be provided.")
         raise Exception()
     
-    # if filenpa_msbuild is None:
-    #     msg.error("filenpa_msbuild must be provided.")
-    #     raise Exception()
-
     if filenpa_dotnet is None:
         msg.error("filenpa_dotnet must be provided")
         raise Exception()
@@ -38,16 +35,6 @@ def backend_build(
     if profile_name is None:
         msg.error("profile_name must be provided.")
         raise Exception()
-
-    # cmd=[
-    #     filenpa_msbuild,
-    #     filenpa_csproj,
-    #     "/v:Normal",
-    #     "/nologo",
-    #     "/m",
-    #     "/p:EnvironmentName={}".format(profile_name),
-    #     # "/p:Configuration={}".format(profile_name.capitalize()),
-    # ]
 
     cmd=[
         filenpa_dotnet,
@@ -83,7 +70,6 @@ def backend_start(
     cmd=[
         "dotnet",
         "run",
-        # "--configuration",
         "--environment",
         profile_name,
         "--project",
@@ -128,7 +114,6 @@ def backend_dotnet(
 
 def backend_publish(
     filenpa_csproj: str,
-    # filenpa_msbuild: str,
     filenpa_dotnet: str,
     profile_name: str,
     exclude_build_folders: list,
@@ -138,10 +123,6 @@ def backend_publish(
     if filenpa_csproj is None:
         msg.error("filenpa_csproj must be provided.")
         raise Exception()
-    
-    # if filenpa_msbuild is None:
-    #     msg.error("filenpa_msbuild must be provided.")
-    #     raise Exception()
 
     if filenpa_dotnet is None:
         msg.error("filenpa_dotnet must be provided")
@@ -170,24 +151,6 @@ def backend_publish(
     )
 
     if to_build is True:
-        # cmd=[
-        #     filenpa_msbuild,
-        #     filenpa_csproj,
-        #     '/v:Normal',
-        #     '/nologo',
-        #     '/m',
-        #     "/p:Configuration={}".format(profile_name),
-        #     # "/p:EnvironmentName={}".format(profile_name),
-        #     "/p:DeployTarget=Package",
-        #     "/p:PublishProvider=FileSystem",
-        #     "/p:PublishProfile={}".format(profile_name),
-        #     '/p:DeployOnBuild=True',
-        #     '/p:DeleteExistingFiles=True',
-        #     '/p:ExcludeApp_Data=False',
-        #     '/p:WebPublishMethod=FileSystem',
-        #     '/p:publishUrl={}'.format(direpa_publish),
-        # ]
-
         cmd=[
             filenpa_dotnet,
             "msbuild",
@@ -233,11 +196,20 @@ def backend_deploy(
     filenpa_modif: str,
     profile_name: str,
     msdeploy_parameters:list=None,
+    rsync_parameters:list=None,
 ):
-    if filenpa_msdeploy is None:
-        msg.error("filenpa_msdeploy must be provided.")
-        raise Exception()
-
+    env=Env()
+    rsync=None
+    if env.is_windows:
+        if filenpa_msdeploy is None:
+            msg.error("filenpa_msdeploy must be provided.")
+            raise Exception()
+    elif env.is_linux:
+        rsync=shutil.which("rsync")
+        if rsync is None:
+            msg.error("rsync not found")
+            raise Exception()
+        
     if filenpa_csproj is None:
         msg.error("filenpa_csproj must be provided.")
         raise Exception()
@@ -274,15 +246,34 @@ def backend_deploy(
             project_name
         ])
 
-        cmd=[
-            filenpa_msdeploy,
-            "-verb:sync",
-            r"-source:dirPath={}".format(direpa_publish),
-            r"-dest:dirPath={}".format(direpa_deploy),
-        ]
+        cmd=[]
+        if env.is_windows:
+            cmd=[
+                filenpa_msdeploy,
+                "-verb:sync",
+                r"-source:dirPath={}".format(direpa_publish),
+                r"-dest:dirPath={}".format(direpa_deploy),
+            ]
 
-        if msdeploy_parameters is not None:
-            cmd.extend(msdeploy_parameters)
+            if msdeploy_parameters is not None:
+                cmd.extend(msdeploy_parameters)
+        elif env.is_linux:
+            cmd=[
+                rsync,
+                "-aP",
+                "--delete",
+            ]
+
+            if rsync_parameters is not None:
+                cmd.extend(rsync_parameters)
+
+            tmp_direpa_publish=direpa_publish
+            if tmp_direpa_publish[-1] != "/":
+                tmp_direpa_publish+="/"
+            cmd.extend([
+                tmp_direpa_publish,
+                direpa_deploy,
+            ])
 
         pprint(cmd)
 

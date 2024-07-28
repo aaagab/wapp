@@ -114,6 +114,7 @@ if __name__ == "__main__":
     global_settings=dict(
         filenpa_msbuild=None,
         filenpa_msdeploy=None,
+        terminal_execute_cmd=None,
         filenpanpm=None,
         profiles=None,
     )
@@ -143,6 +144,7 @@ if __name__ == "__main__":
         filenpa_csproj=None,
         project_name=None,
         msdeploy_parameters=None,
+        rsync_parameters=None,
         webroot=None,
     )
     if os.path.exists(filenpa_user_settings):
@@ -293,6 +295,7 @@ if __name__ == "__main__":
                 filenpa_modif=filenpa_modif,
                 profile_name=profile_name,
                 msdeploy_parameters=user_settings["msdeploy_parameters"],
+                rsync_parameters=user_settings["rsync_parameters"],
                 project_name=user_settings["project_name"],
             )
         elif args.backend.dotnet._here is True:
@@ -353,6 +356,7 @@ if __name__ == "__main__":
                 project_name=user_settings["project_name"],
                 port=args.frontend.start.port._value,
                 ignore_if=args.frontend.start.ignore_if._here,
+                terminal_execute_cmd=global_settings["terminal_execute_cmd"],
             )
         else:
             pkg.msg.error("For --frontend: either --build, --start, --publish, or --deploy must be provided", exit=1)

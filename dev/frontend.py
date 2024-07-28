@@ -8,11 +8,15 @@ import shlex
 import sys
 import tempfile
 import time
+import shutil
+import psutil
 
 from ..gpkgs import message as msg
 from ..gpkgs import shell_helpers as shell
 
 from .windows import Windows
+from .helpers import Env
+env=Env()
 
 def frontend_npm(
     direpa_sources: str,
@@ -103,7 +107,8 @@ def frontend_build(
 def execute_script(
     script_name, 
     window_name,
-    dy_vars=None
+    dy_vars:dict=None,
+    terminal_execute_cmd:list=None,
 ):
     filenpa_info=os.path.join(os.path.dirname(os.path.realpath(__file__)), script_name)
 
@@ -117,28 +122,77 @@ def execute_script(
    
         with tempfile.NamedTemporaryFile(delete=False) as tmp:
             tmp.write("{}\n".format(data_str).encode())
-            proc=subprocess.Popen([
-                "start",
-                "cmd",
-                "/k",
-                "title {} & python {}".format( window_name, tmp.name)
-            ], shell=True)
-            proc.communicate()
-            if proc.returncode == 0:
-                pass
-            else:
-                sys.exit(1)
+            proc=None
+            if env.is_windows:
+                proc=subprocess.Popen([
+                    "start",
+                    "cmd",
+                    "/k",
+                    "title {} & python {}".format( window_name, tmp.name)
+                ], shell=True)
+
+                proc.communicate()
+                if proc.returncode != 0:
+                    sys.exit(1)
+            elif env.is_linux:
+                if terminal_execute_cmd is None:
+                    msg.error("terminal_execute_cmd is required i.e. [\"/usr/bin/konsole\", \"-e\"]")
+                    raise Exception()
+                with tempfile.NamedTemporaryFile(delete=False) as tmp2:
+                    tmp2.write("#!/bin/bash\n".encode())
+                    tmp2.write("source ~/.bashrc\n".encode())
+                    tmp2.write(f"rm {tmp2.name}\n".encode())
+                    tmp2.write(f'echo -ne "\\033]30;{window_name}\\007"\n'.encode())
+                    tmp2.write(f"python {tmp.name}\n".encode())
+                    cmd=[
+                        *terminal_execute_cmd,
+                        f"/bin/bash --rcfile {tmp2.name}",
+                    ]
+
+                    cmd=[
+                        "/usr/bin/konsole",
+                        "-e",
+                        f"/bin/bash",
+                        "--rcfile",
+                        tmp2.name,
+                    ]
+                    proc=subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
 
 def get_port_pid(port):
-    result=shell.cmd_get_value("netstat -ano | findstr :{}".format(port))
-    if result is None:
-        return None
-    else:
-        result=int(result.split()[-1])
-        if result == 0:
+    result=None
+    if env.is_windows:
+        result=shell.cmd_get_value("netstat -ano | findstr :{}".format(port))
+        if result is None:
             return None
         else:
-            return result
+            result=int(result.split()[-1])
+            if result == 0:
+                return None
+            else:
+                return result
+
+    elif env.is_linux:
+        result=shell.cmd_get_value(f"lsof -nP -iTCP:{port} -sTCP:LISTEN")
+        if result is None:
+            return None
+        else:
+            pid_index=None
+            lines=result.splitlines()
+            if len(lines) != 2:
+                msg.error("lsof output should have only two lines.")
+                print("\n".join(lines))
+
+                raise Exception()
+                
+            for line in lines:
+                columns=line.split()
+                if pid_index is None:
+                    pid_index=columns.index("PID")
+                    if pid_index is None:
+                        msg.error("PID has not been found in lsof command output headers.")
+                        raise Exception()
+                else:
+                    return int(columns[pid_index])
 
 def frontend_start(
     filenpa_npm: str,
@@ -146,28 +200,46 @@ def frontend_start(
     project_name: str,
     port: int,
     ignore_if: bool,
+    terminal_execute_cmd: str = None,
 ):
     if filenpa_npm is None:
-        msg.error("filenpa_npm must be provided.")
+        msg.error("filenpa_npm is required.")
         raise Exception()
 
     if direpa_sources is None:
-        msg.error("direpa_sources must be provided.")
+        msg.error("direpa_sources is required.")
         raise Exception()
 
     if project_name is None:
-        msg.error("project_name must be provided.")
+        msg.error("project_name is required.")
         raise Exception()
+    
+    if env.is_linux:
+        if terminal_execute_cmd is None:
+            msg.error("terminal_execute_cmd is required i.e. [\"/usr/bin/konsole\", \"-e\"]")
+            raise Exception()
+        if shutil.which("wmctrl") is None:
+            msg.error("wmctrl needs to be installed")
+            raise Exception()
+        if shutil.which("xdotool") is None:
+            msg.error("xdotool needs to be installed")
+            raise Exception()
 
     if port is None:
         port=3000
-    obj_windows=Windows()
-    cmd_pid=obj_windows.get_active()
+
+    win_id=None
+    if env.is_windows:
+        obj_windows=Windows()
+        win_id=obj_windows.get_active()
+    elif env.is_linux:
+        win_id=hex(int(subprocess.check_output(["xdotool", "getactivewindow"]).decode().rstrip()))
 
     window_name="client_{}".format(project_name)
     filenpa_wapp=os.path.join(os.path.expanduser("~"), "fty", "tmp", "wapp-{}.json".format(port))
 
     port_pid=get_port_pid(port)
+
     process_cmd=False
     if port_pid is None:
         process_cmd=True
@@ -208,26 +280,32 @@ def frontend_start(
             "frontend_server.py", 
             window_name=window_name, 
             dy_vars=dict(
-            filenpa_wapp=filenpa_wapp,
-            project_name=project_name,
-            direpa_sources=direpa_sources,
-            port=port,
-            launch_pid=os.getpid(),
-        ))
+                filenpa_wapp=filenpa_wapp,
+                project_name=project_name,
+                direpa_sources=direpa_sources,
+                port=port,
+                launch_pid=os.getpid(),
+            ),
+            terminal_execute_cmd=terminal_execute_cmd,
+        )
 
         try:
             while True:
                 port_pid=get_port_pid(port)
                 if port_pid is not None:
-                    with open(filenpa_wapp, "r") as f:
-                        dy_wapp=json.load(f)
-                        if len(dy_wapp[project_name]["pids"]) >= 2:
-                            obj_windows.rename(dy_wapp[project_name]["pids"][1], window_name)
-
+                    if env.is_windows:
+                        with open(filenpa_wapp, "r") as f:
+                            dy_wapp=json.load(f)
+                            if len(dy_wapp[project_name]["pids"]) >= 2:
+                                obj_windows.rename(dy_wapp[project_name]["pids"][1], window_name)
                     msg.success("frontend development server started on port '{}'".format(port))
                     break
                 time.sleep(.3)
         except KeyboardInterrupt:
             sys.exit(1)
 
-        obj_windows.focus(cmd_pid)
+        if env.is_windows:
+            obj_windows.focus(win_id)
+        elif env.is_linux:
+            os.system(f"wmctrl -i -a {win_id}")
+            

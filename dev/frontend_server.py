@@ -4,7 +4,17 @@ import json
 import os
 import signal
 import sys
+import platform
+import shutil
 import subprocess
+import psutil
+
+class Env():
+    def __init__(self):
+        self.platform=platform.system()
+        self.is_windows=self.platform == "Windows"
+        self.is_linux=self.platform == "Linux"
+env=Env()
 
 os.environ["BROWSER"]="None"
 os.environ["HOST"]="127.0.0.1"
@@ -14,7 +24,6 @@ launch_pid="{launch_pid}"
 project_name="{project_name}"
 filenpa_wapp=r"{filenpa_wapp}"
 direpa_sources=r"{direpa_sources}"
-ppid=os.getppid()
 dy_wapp=dict({{
     project_name: dict(
         pids=[],
@@ -22,6 +31,12 @@ dy_wapp=dict({{
 }})
 
 pids=[]
+ppid=None
+if env.is_linux:
+    tmp_pid=psutil.Process(os.getpid()).ppid()
+    ppid=psutil.Process(tmp_pid).ppid()
+elif env.is_windows:
+    ppid=os.getppid()
 pids.append(ppid)
 
 if os.path.exists(filenpa_wapp):
@@ -45,10 +60,18 @@ with open(filenpa_wapp, "w") as f:
 
 try:
     os.chdir(direpa_sources)
-    proc=subprocess.Popen([
-        r"C:\Program Files\nodejs\npm.cmd",
-        "start",
-    ])
+    proc=None
+    if env.is_windows:
+        proc=subprocess.Popen([
+            r"C:\Program Files\nodejs\npm.cmd",
+            "start",
+        ])
+    elif env.is_linux:
+        proc=subprocess.Popen([
+            shutil.which("npm"),
+            "start",
+        ])
+        
     pids.append(proc.pid)
     dy_wapp[project_name]["pids"].insert(0, proc.pid)
     with open(filenpa_wapp, "w") as f:
@@ -58,7 +81,7 @@ try:
         sys.exit(1)
 except BaseException as e:
     os.kill(int(launch_pid), signal.SIGTERM)
-    os.system("pause")
+    input("Press any key to continue . . .")
     raise
 finally:
     os.remove(os.path.realpath(__file__))

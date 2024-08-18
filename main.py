@@ -17,6 +17,7 @@ if __name__ == "__main__":
 
     def seed(pkg_major, direpas_configuration=dict(), fun_auto_migrate=None):
         fun_auto_migrate()
+        
     
     def get_path(path_elem: str, is_dir: bool):
         if path_elem is None:
